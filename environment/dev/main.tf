@@ -3,21 +3,24 @@ variable "project_name" {
   type    = string
 }
 
+locals {
+  common_tags = {
+    Owner   = "ShubhamBorkar"
+    Project = var.project_name
+    Env     = basename(abspath(dirname(path.module)))
+  }
+}
+
 module "ec2" {
   source         = "../../modules/ec2"
   instance_count = 1
   instance_ami   = "ami-04b70fa74e45c3917" #ubuntu us-east-1 
   instance_type  = "t2.micro"
-
-  subnet_id     = module.vpc.public_subnets[0]
-  instance_name = "nginx"
-  project       = var.project_name
-  env           = basename(abspath(dirname(path.module)))
-  tags = {
-    Owner   = "ShubhamBorkar"
-    Project = var.project_name
-    Env     = basename(abspath(dirname(path.module)))
-  }
+  subnet_id      = module.vpc.public_subnets[0]
+  instance_name  = "nginx"
+  project        = var.project_name
+  env            = basename(abspath(dirname(path.module)))
+  tags           = local.common_tags
 }
 
 module "vpc" {
@@ -29,9 +32,5 @@ module "vpc" {
   availability_zones        = ["us-east-1a", "us-east-1b", "us-east-1c", "us-east-1d"]
   env                       = basename(abspath(dirname(path.module)))
   project                   = var.project_name
-  tags = {
-    Owner   = "ShubhamBorkar"
-    Project = var.project_name
-    Env     = basename(abspath(dirname(path.module)))
-  }
+  tags                      = local.common_tags
 }
