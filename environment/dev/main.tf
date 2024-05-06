@@ -4,10 +4,11 @@ variable "project_name" {
 }
 
 locals {
+  environment = basename(abspath(dirname(path.module)))
   common_tags = {
     Owner   = "ShubhamBorkar"
     Project = var.project_name
-    Env     = basename(abspath(dirname(path.module)))
+    Env     = local.environment
   }
 }
 
@@ -16,10 +17,13 @@ module "ec2" {
   instance_count = 1
   instance_ami   = "ami-04b70fa74e45c3917" #ubuntu us-east-1 
   instance_type  = "t2.micro"
-  subnet_id      = module.vpc.public_subnets[0]
+  subnet_id      = module.vpc.public_subnets
   instance_name  = "nginx"
   project        = var.project_name
-  env            = basename(abspath(dirname(path.module)))
+  sg_name        = module.security_group.sg_id
+  key_name       = "lenovo_ubuntu"
+  user_data      = file("../../userdata/${local.environment}.sh")
+  env            = local.environment
   tags           = local.common_tags
 }
 
@@ -33,4 +37,13 @@ module "vpc" {
   env                       = basename(abspath(dirname(path.module)))
   project                   = var.project_name
   tags                      = local.common_tags
+}
+
+module "security_group" {
+  source  = "../../modules/security_group"
+  sg_name = "sg"
+  vpc_id  = module.vpc.vpc_id
+  env     = local.environment
+  project = var.project_name
+  tags    = local.common_tags
 }
