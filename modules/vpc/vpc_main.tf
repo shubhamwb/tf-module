@@ -9,9 +9,9 @@ resource "aws_vpc" "main" {
 
 /* Public Subnet Creation */
 resource "aws_subnet" "public_subnet" {
-  count                   = length(var.public_subnet_cidr_block)
+  count                   = var.public_subnet_count
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_cidr_block[count.index]
+  cidr_block              = cidrsubnet(var.vpc_cidr_block, 8, count.index + 1)
   availability_zone       = element(var.availability_zones, count.index)
   map_public_ip_on_launch = true
 
@@ -26,33 +26,36 @@ resource "aws_internet_gateway" "public_igw" {
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = var.cidr_block_anywhere #"0.0.0.0/0"
     gateway_id = aws_internet_gateway.public_igw.id
   }
   tags = merge(var.tags, { "Name" = format("%s-%s-%s", var.project, var.env, "public-rt") })
 }
 
+
 resource "aws_route_table_association" "public_rt" {
-  count          = length(var.public_subnet_cidr_block)
+  count          = var.public_subnet_count
   subnet_id      = aws_subnet.public_subnet[count.index].id
   route_table_id = aws_route_table.public_rt.id
 }
 
-/* Private Subnet Creation */
+# Private Subnet Creation
 
 resource "aws_subnet" "private_subnet" {
-  count                   = length(var.private_subnet_cidr_block)
+  count                   = var.private_subnet_count
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.private_subnet_cidr_block[count.index]
+  cidr_block              = cidrsubnet(var.vpc_cidr_block, 8, count.index + 100)
   availability_zone       = element(var.availability_zones, count.index)
   map_public_ip_on_launch = false
 
   tags = merge(var.tags, { "Name" = format("%s-%s-%s-%s", var.project, var.env, "private-subnet", count.index + 1) })
 }
 
+
 resource "aws_eip" "nat_eip" {
   domain     = "vpc"
   depends_on = [aws_internet_gateway.public_igw]
+  tags       = merge(var.tags, { "Name" = format("%s-%s-%s", var.project, var.env, "eip-nat") })
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -65,7 +68,7 @@ resource "aws_nat_gateway" "nat" {
 resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main.id
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = var.cidr_block_anywhere # "0.0.0.0/0"
     gateway_id = aws_nat_gateway.nat.id
   }
 
@@ -73,7 +76,7 @@ resource "aws_route_table" "private_rt" {
 }
 
 resource "aws_route_table_association" "private_rt" {
-  count          = length(var.private_subnet_cidr_block)
+  count          = var.private_subnet_count
   subnet_id      = aws_subnet.private_subnet[count.index].id
   route_table_id = aws_route_table.private_rt.id
 }

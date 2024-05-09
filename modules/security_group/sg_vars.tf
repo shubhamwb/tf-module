@@ -1,8 +1,8 @@
-variable "sg_name" {
+variable "vpc_id" {
   type = string
 }
 
-variable "vpc_id" {
+variable "cidr_block_anywhere" {
   type = string
 }
 

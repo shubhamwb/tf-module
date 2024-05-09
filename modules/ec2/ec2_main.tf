@@ -6,5 +6,12 @@ resource "aws_instance" "main" {
   security_groups = [var.sg_name]
   key_name        = var.key_name
   user_data       = var.user_data
-  tags            = merge(var.tags, { "Name" = format("%s-%s-%s-%s", var.project, var.env, var.instance_name, count.index + 1) })
+
+  tags = merge(var.tags, { "Name" = format("%s-%s-%s-%s", var.project, var.env, var.instance_name, count.index + 1) })
+}
+
+resource "aws_eip" "main" {
+  count    = var.instance_count
+  instance = aws_instance.main[count.index].id
+  tags     = merge(var.tags, { "Name" = format("%s-%s-%s-%s", var.project, var.env, "eip", count.index + 1) })
 }

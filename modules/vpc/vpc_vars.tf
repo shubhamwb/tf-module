@@ -19,14 +19,18 @@ variable "instance_tenancy" {
   type = string
 }
 
-variable "public_subnet_cidr_block" {
-  type = list(any)
+variable "public_subnet_count" {
+  type = number
+}
+
+variable "private_subnet_count" {
+  type = number
 }
 
 variable "availability_zones" {
   type = list(string)
 }
 
-variable "private_subnet_cidr_block" {
-  type = list(string)
+variable "cidr_block_anywhere" {
+  type = string
 }

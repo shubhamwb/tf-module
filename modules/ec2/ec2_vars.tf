@@ -2,10 +2,6 @@ variable "instance_count" {
   type = number
 }
 
-variable "instance_name" {
-  type = string
-}
-
 variable "instance_ami" {
   type = string
 }
@@ -34,6 +30,10 @@ variable "project" {
 }
 
 variable "env" {
+  type = string
+}
+
+variable "instance_name" {
   type = string
 }
 
